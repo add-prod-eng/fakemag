@@ -1,9 +1,15 @@
 package main.java.ro.unibuc.hello.service;
 
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
 import java.util.Base64.Decoder;
+import java.util.function.Function;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import main.java.ro.unibuc.hello.data.UserEntity;
 
 @Service
 public class JwtService {
@@ -23,12 +29,12 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserEntity userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, userDetails);
     }
 
-    private String createToken(Map<String, Object> claims, UserDetails userDetails) {
+    private String createToken(Map<String, Object> claims, UserEntity userDetails) {
         return Jwts.builder().setClaims(claims).setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
@@ -47,7 +53,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, UserEntity userDetails) {
         final String username = getUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }

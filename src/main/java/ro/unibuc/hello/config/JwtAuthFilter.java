@@ -1,6 +1,18 @@
 package ro.unibuc.hello.config;
 
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationConfiguration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.web.client.RestTemplate;
+
+import main.java.ro.unibuc.hello.data.UserEntity;
+import ro.unibuc.hello.exception.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -15,9 +27,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             handlerExceptionResolver.resolveException(request, response, null,
@@ -31,7 +43,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (username != null && authentication == null) {
-                User user = userService.loadUserByUsername(username);
+                UserEntity user = userService.loadUserByUsername(username);
 
                 if (jwtService.validateToken(jwt, user)) {
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(

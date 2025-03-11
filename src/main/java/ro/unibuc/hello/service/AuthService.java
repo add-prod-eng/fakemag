@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component;
 
 import main.java.ro.unibuc.hello.dto.LoginUserDTO;
 import main.java.ro.unibuc.hello.dto.RegisterUserDTO;
-import ro.unibuc.hello.data.*;
-import ro.unibuc.hello.dto.UserDTO;
+import main.java.ro.unibuc.hello.data.UserRepository;
+import main.java.ro.unibuc.hello.data.UserEntity;
 import ro.unibuc.hello.exception.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
@@ -26,13 +26,13 @@ public class AuthService {
     @Autowired
     private final AuthenticationManager authenticationManager;
 
-    public User signup(RegisterUserDTO input) {
-        User user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()));
+    public UserEntity signup(RegisterUserDTO input) {
+        UserEntity user = new User(input.getUsername(), input.getEmail(), passwordEncoder.encode(input.getPassword()));
         return userRepository.save(user);
     }
 
-    public User auth(LoginUserDTO input) {
-        User user = userRepository.findByUsername(input.getUsername());
+    public UserEntity auth(LoginUserDTO input) {
+        UserEntity user = userRepository.findByUsername(input.getUsername());
         if (user == null) {
             throw new RuntimeException("User not found");
         }
