@@ -3,7 +3,6 @@ package ro.unibuc.hello.dto;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class UserDTO {
-    private String id;
     private String username;
     private String email;
     private String password;
@@ -16,12 +15,6 @@ public class UserDTO {
         this.password = BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
-    public UserDTO(String id, String username, String email, String password) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = BCrypt.hashpw(password, BCrypt.gensalt());
-    }
 
     public String getId() {
         return id;
