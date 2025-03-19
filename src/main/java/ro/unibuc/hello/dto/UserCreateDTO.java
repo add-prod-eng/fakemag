@@ -1,26 +1,16 @@
 package ro.unibuc.hello.dto;
 
-import org.mindrot.jbcrypt.BCrypt;
-
-public class UserDTO {
-    private String id;
+public class UserCreateDTO {
     private String username;
     private String email;
+    private String password;
 
-    public UserDTO() {}
+    public UserCreateDTO() {}
 
-    public UserDTO(String id, String username, String email) {
-        this.id = id;
+    public UserCreateDTO(String username, String email, String password) {
         this.username = username;
         this.email = email;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+        this.password = password;
     }
 
     public String getUsername() {
@@ -39,4 +29,11 @@ public class UserDTO {
         this.email = email;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
