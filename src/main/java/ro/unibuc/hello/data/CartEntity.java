@@ -26,16 +26,16 @@ public class CartEntity {
 
     public CartEntity() {}
 
-    public CartEntity(String userId, String productId, Date date) {
-        this.userId = userId;
-        this.productId = productId;
+    public CartEntity(UserEntity userId, ProductEntity productId, Date date) {
+        this.user = userId;
+        this.product = productId;
         this.date = date;
     }
 
-    public CartEntity(String userId, String id, String productId, Date date) {
+    public CartEntity(String id, UserEntity userId, ProductEntity productId, Date date) {
         this.id = id;
-        this.userId = userId;
-        this.productId = productId;
+        this.user = userId;
+        this.product = productId;
         this.date = date;
     }
 
@@ -47,20 +47,20 @@ public class CartEntity {
         this.id = id;
     }
 
-    public String getUserId() {
-        return userId;
+    public UserEntity getUser() {
+        return user;
     }
 
-    public void setUserId(String userId){
-        this.userId = userId;
+    public void setUser(UserEntity userId){
+        this.user = userId;
     }
 
-    public String getProductId() {
-        return productId;
+    public ProductEntity getProduct() {
+        return product;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setProduct(ProductEntity productId) {
+        this.product = productId;
     }
 
     public Date getDate() {
@@ -73,6 +73,6 @@ public class CartEntity {
 
     @Override
     public String toString() {
-        return String.format("CartEntity[id=%s, userId=%s, productId=%s, date=%s]", id, userId, productId, date);
+        return String.format("CartEntity[id=%s, userId=%s, productId=%s, date=%s]", id, user, product, date);
     }
 }

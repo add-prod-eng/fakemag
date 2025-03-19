@@ -3,9 +3,10 @@ package ro.unibuc.hello.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ro.unibuc.hello.dto.CartDto;
+import ro.unibuc.hello.dto.CartDTO;
 import ro.unibuc.hello.service.CartService;
 import java.util.List;
+import ro.unibuc.hello.exception.EntityNotFoundException;
 
 
 
@@ -17,33 +18,33 @@ public class CartController {
     private CartService cartService;
 
     @GetMapping
-    public List<CartDto> getAllCarts() {
+    public List<CartDTO> getAllCarts() {
         return cartService.getAllCarts();
     }
 
     @GetMapping("/{id}")
-    public CartDto getCartById(@PathVariable Long id) throws EntityNotFoundException {
+    public CartDTO getCartById(@PathVariable String id) throws EntityNotFoundException {
         return cartService.getCartById(id);
     }
 
     @PostMapping
-    public CartDto createCart(@RequestBody CartDto cartDto) {
-        return cartService.saveCart(createdCart);
+    public CartDTO createCart(@RequestBody CartDTO cartDto) {
+        return cartService.saveCart(cartDto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCart(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCart(@PathVariable String id) {
         cartService.deleteCart(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/user/{userId}")
-    public List<CartDto> getCartsByUserId(@PathVariable Long userId) {
+    public List<CartDTO> getCartsByUserId(@PathVariable String userId) {
         return cartService.getCartsByUserId(userId);
     }
 
     @GetMapping("/product/{productId}")
-    public List<CartDto> getCartsByProductId(@PathVariable Long productId) {
+    public List<CartDTO> getCartsByProductId(@PathVariable String productId) {
         return cartService.getCartsByProductId(productId);
     }
 
