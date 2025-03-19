@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 import ro.unibuc.hello.dto.UserDTO;
+import ro.unibuc.hello.dto.UserLoginDTO;
+import ro.unibuc.hello.dto.UserCreateDTO;
 import ro.unibuc.hello.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserDTO createUser(@RequestBody UserDTO userDTO) {
+    public UserDTO createUser(@RequestBody UserCreateDTO userDTO) {
         return userService.saveUser(userDTO);
     }
 
@@ -45,7 +47,7 @@ public class UserController {
     }
 
     @PostMapping("/authenticate")
-    public boolean authenticateUser(@RequestBody UserDTO userDTO) {
+    public boolean authenticateUser(@RequestBody UserLoginDTO userDTO) {
         return userService.authenticateUser(userDTO.getUsername(), userDTO.getPassword());
     }
 }

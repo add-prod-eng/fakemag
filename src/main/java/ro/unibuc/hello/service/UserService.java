@@ -3,6 +3,7 @@ package ro.unibuc.hello.service;
 import ro.unibuc.hello.data.UserEntity;
 import ro.unibuc.hello.data.UserRepository;
 import ro.unibuc.hello.dto.UserDTO;
+import ro.unibuc.hello.dto.UserCreateDTO;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,7 +45,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserDTO saveUser(UserDTO userDTO) {
+    public UserDTO saveUser(UserCreateDTO userDTO) {
         UserEntity user = new UserEntity(
                 Long.toString(counter.incrementAndGet()),
                 userDTO.getUsername(),
