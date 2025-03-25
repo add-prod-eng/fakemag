@@ -51,3 +51,10 @@ DELETE http://localhost:8080/greetings/{{deleteGreetingId}}
 
 
 # TODO add requests for your own endpoints!
+
+curl -X 'GET' 'http://curly-space-lamp-rp66959jq6q3w5vj-8080.app.github.dev/users' -H 'accept: */*'
+
+# rewrite the above curl request to a rest client request
+
+GET http://localhost:8080/users
+Accept: */*
