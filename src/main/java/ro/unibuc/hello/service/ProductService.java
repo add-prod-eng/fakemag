@@ -4,6 +4,7 @@ import ro.unibuc.hello.data.ProductEntity;
 import ro.unibuc.hello.data.ProductRepository;
 import ro.unibuc.hello.data.CategoryEntity;
 import ro.unibuc.hello.data.CategoryRepository;
+import ro.unibuc.hello.data.OrderRepository;
 import ro.unibuc.hello.dto.ProductDTO;
 import ro.unibuc.hello.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -22,6 +24,9 @@ public class ProductService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     private final AtomicLong counter = new AtomicLong();
 
@@ -46,6 +51,28 @@ public class ProductService {
                 .map(product -> new ProductDTO(product.getId(), product.getDescription(), product.getPrice(), product.getStock(),
                                                product.getCategory() != null ? product.getCategory().getId() : null))
                 .collect(Collectors.toList());
+    }
+
+    public List<ProductDTO> getTopMostOrderedProducts(int limit) {
+        Map<ProductDTO, Long> productOrderCounts = orderRepository.findAll().stream()
+            .flatMap(order -> order.getProductOrders().stream()) // Assuming OrderEntity has a getProductOrders() method
+            .map(productOrder -> {
+                ProductEntity product = productOrder.getProduct();
+                return new ProductDTO(
+                    product.getId(),
+                    product.getDescription(),
+                    product.getPrice(),
+                    product.getStock(),
+                    product.getCategory() != null ? product.getCategory().getId() : null
+                );
+            })
+            .collect(Collectors.groupingBy(product -> product, Collectors.counting()));
+    
+        return productOrderCounts.entrySet().stream()
+            .sorted((entry1, entry2) -> Long.compare(entry2.getValue(), entry1.getValue()))
+            .limit(limit)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
     }
 
     public ProductDTO saveProduct(ProductDTO productDTO) throws EntityNotFoundException {

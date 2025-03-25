@@ -7,6 +7,7 @@ import ro.unibuc.hello.dto.ProductDTO;
 import ro.unibuc.hello.exception.EntityNotFoundException;
 import ro.unibuc.hello.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,12 @@ public class ProductController {
     public List<ProductDTO> getProductsByCategory(@PathVariable String categoryId) {
         return productService.getProductsByCategory(categoryId);
     }
+
+    @GetMapping("/products/top-ordered")
+    public ResponseEntity<List<ProductDTO>> getTopMostOrderedProducts(@RequestParam(defaultValue = "5") int limit) {
+        List<ProductDTO> topProducts = productService.getTopMostOrderedProducts(limit);
+        return ResponseEntity.ok(topProducts);
+}
 
     @PostMapping
     public ProductDTO createProduct(@RequestBody ProductDTO productDTO) {
