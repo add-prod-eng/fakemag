@@ -9,6 +9,7 @@ import ro.unibuc.hello.dto.ProductDTO;
 import ro.unibuc.hello.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ro.unibuc.hello.exception.ValidationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -76,9 +77,19 @@ public class ProductService {
     }
 
     public ProductDTO saveProduct(ProductDTO productDTO) throws EntityNotFoundException {
+        if (productDTO.getDescription() == null || productDTO.getDescription().isEmpty()) {
+            throw new ValidationException("Product description is mandatory.");
+        }
+        if (productDTO.getPrice() == null || productDTO.getPrice() <= 0) {
+            throw new ValidationException("Product price must be greater than zero.");
+        }
+        if (productDTO.getStock() == null || productDTO.getStock() < 0) {
+            throw new ValidationException("Product stock cannot be negative.");
+        }
+    
         CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found: " + productDTO.getCategoryId()));
-
+    
         ProductEntity product = new ProductEntity(
                 Long.toString(counter.incrementAndGet()),
                 productDTO.getDescription(),
@@ -93,8 +104,19 @@ public class ProductService {
     public List<ProductDTO> saveAll(List<ProductDTO> productDTOs) {
         List<ProductEntity> products = productDTOs.stream()
                 .map(dto -> {
+                    if (dto.getDescription() == null || dto.getDescription().isEmpty()) {
+                        throw new ValidationException("Product description is mandatory.");
+                    }
+                    if (dto.getPrice() == null || dto.getPrice() <= 0) {
+                        throw new ValidationException("Product price must be greater than zero.");
+                    }
+                    if (dto.getStock() == null || dto.getStock() < 0) {
+                        throw new ValidationException("Product stock cannot be negative.");
+                    }
+    
                     CategoryEntity category = categoryRepository.findById(dto.getCategoryId())
-                            .orElseThrow(() -> new RuntimeException("Category not found: " + dto.getCategoryId())); 
+                            .orElseThrow(() -> new RuntimeException("Category not found: " + dto.getCategoryId()));
+    
                     return new ProductEntity(
                             Long.toString(counter.incrementAndGet()),
                             dto.getDescription(),
@@ -104,9 +126,9 @@ public class ProductService {
                     );
                 })
                 .collect(Collectors.toList());
-
+    
         List<ProductEntity> savedProducts = productRepository.saveAll(products);
-
+    
         return savedProducts.stream()
                 .map(product -> new ProductDTO(product.getId(), product.getDescription(), product.getPrice(), product.getStock(), product.getCategory().getId()))
                 .collect(Collectors.toList());
