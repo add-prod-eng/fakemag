@@ -6,6 +6,8 @@ import ro.unibuc.hello.data.CategoryEntity;
 import ro.unibuc.hello.data.CategoryRepository;
 import ro.unibuc.hello.dto.CategoryDTO;
 import ro.unibuc.hello.exception.EntityNotFoundException;
+import ro.unibuc.hello.exception.ValidationException;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +42,10 @@ public class CategoryService {
     
 
     public CategoryDTO saveCategory(CategoryDTO categoryDTO) {
+        if (categoryDTO.getName() == null || categoryDTO.getName().isEmpty()) {
+            throw new ValidationException("Category name is mandatory.");
+        }
+    
         CategoryEntity category = new CategoryEntity(categoryDTO.getName(), categoryDTO.getDescription());
         categoryRepository.save(category);
         return new CategoryDTO(category.getId(), category.getName(), category.getDescription());

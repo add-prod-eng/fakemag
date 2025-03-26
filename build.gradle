@@ -44,8 +44,10 @@ dependencies {
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
 
 	// Integration tests - test containers dependencies
     testImplementation "org.testcontainers:testcontainers:$testcontainersVersion"
