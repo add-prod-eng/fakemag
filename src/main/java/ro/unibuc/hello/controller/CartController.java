@@ -38,7 +38,6 @@ public class CartController {
     }
 
     @PostMapping
- feature/login
     public ResponseEntity<?> createCart(@RequestBody CartDTO cartDto, @RequestBody UserLoginDTO userDTO) {
         try{
             userService.authenticateUser(userDTO);
