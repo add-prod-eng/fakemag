@@ -28,6 +28,11 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
+    @GetMapping("/category/{categoryId}")
+    public List<ProductDTO> getProductsByCategory(@PathVariable String categoryId) {
+        return productService.getProductsByCategory(categoryId);
+    }
+
     @PostMapping
     public ProductDTO createProduct(@RequestBody ProductDTO productDTO) {
         return productService.saveProduct(productDTO);
