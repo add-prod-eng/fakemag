@@ -13,8 +13,9 @@ import ro.unibuc.hello.service.CartService;
 import ro.unibuc.hello.service.UserService;
 import java.util.List;
 import ro.unibuc.hello.exception.EntityNotFoundException;
+import ro.unibuc.hello.exception.InvalidCredentialsException;
 
-
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/carts")
@@ -37,11 +38,19 @@ public class CartController {
     }
 
     @PostMapping
-    public CartDTO createCart(@RequestBody CartDTO cartDto, @RequestBody UserLoginDTO userDTO) {
-        if(userService.authenticateUser(userDTO.getUsername(), userDTO.getPassword())) {
-            return cartService.saveCart(cartDto);
+ feature/login
+    public ResponseEntity<?> createCart(@RequestBody CartDTO cartDto, @RequestBody UserLoginDTO userDTO) {
+        try{
+            userService.authenticateUser(userDTO);
+            userService.equalUser(userDTO, cartDto.getUserId());
+            return ResponseEntity.ok(cartService.saveCart(cartDto));
+        } catch (InvalidCredentialsException e) {
+            return ResponseEntity.status(401).body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
         }
-        return null;
     }
 
     @DeleteMapping("/{id}")
@@ -51,8 +60,18 @@ public class CartController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<CartDTO> getCartsByUserId(@PathVariable String userId) {
-        return cartService.getCartsByUserId(userId);
+    public ResponseEntity<?> getCartsByUserId(@PathVariable String userId, @RequestBody UserLoginDTO userDTO) {
+        try {
+            userService.authenticateUser(userDTO);
+            userService.equalUser(userDTO, userId);
+            return ResponseEntity.ok(cartService.getCartsByUserId(userId));
+        } catch (InvalidCredentialsException e) {
+            return ResponseEntity.status(401).body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     @GetMapping("/product/{productId}")
