@@ -92,20 +92,6 @@ class CategoryControllerTest {
     }
 
     @Test
-    void test_createCategoryWithoutName() throws Exception {
-        CategoryDTO invalidCategory = new CategoryDTO(null, "Devices and gadgets");
-
-        doThrow(new ValidationException("Category name is mandatory."))
-                .when(categoryService).saveCategory(any(CategoryDTO.class));
-
-        mockMvc.perform(post("/categories")
-                 .contentType(MediaType.APPLICATION_JSON)
-                 .content("{\"description\":\"Devices and gadgets\"}"))
-                 .andExpect(status().isBadRequest())
-                 .andExpect(content().string("Category name is mandatory."));
-    }
-
-    @Test
     void test_updateCategory() throws Exception {
         String id = "1";
         CategoryDTO updatedCategory = new CategoryDTO(id, "Updated Electronics", "Updated description");

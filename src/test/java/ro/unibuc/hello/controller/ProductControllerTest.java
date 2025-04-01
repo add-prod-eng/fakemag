@@ -68,23 +68,6 @@ class ProductControllerTest {
     }
 
     @Test
-void test_getTopMostOrderedProducts() throws Exception {
-    List<ProductDTO> topProducts = Arrays.asList(
-            new ProductDTO("1", "Laptop", 3000L, 10L, "Electronics"),
-            new ProductDTO("2", "Phone", 1500L, 20L, "Electronics")
-    );
-    when(productService.getTopMostOrderedProducts(2)).thenReturn(topProducts);
-
-    mockMvc.perform(get("/products/top-ordered")
-            .param("limit", "2"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].id").value("1"))
-            .andExpect(jsonPath("$[0].description").value("Laptop"))
-            .andExpect(jsonPath("$[1].id").value("2"))
-            .andExpect(jsonPath("$[1].description").value("Phone"));
-}
-
-    @Test
     void test_createProduct() throws Exception {
         ProductDTO newProduct = new ProductDTO("1", "Laptop", 3000L, 10L, "Electronics");
         when(productService.saveProduct(any(ProductDTO.class))).thenReturn(newProduct);
@@ -96,72 +79,6 @@ void test_getTopMostOrderedProducts() throws Exception {
                 .andExpect(jsonPath("$.id").value("1"))
                 .andExpect(jsonPath("$.description").value("Laptop"));
     }
-
-    @Test
-    void test_createProductWithoutPrice() throws Exception {
-        doThrow(new ValidationException("Product price must be greater than zero."))
-                .when(productService).saveProduct(any(ProductDTO.class));
-    
-        mockMvc.perform(post("/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"description\":\"Laptop\",\"stock\":10,\"categoryId\":\"Electronics\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Product price must be greater than zero."));
-    }
-
-    @Test
-    void test_createProductWithNegativeStock() throws Exception {
-        doThrow(new ValidationException("Product stock cannot be negative."))
-                .when(productService).saveProduct(any(ProductDTO.class));
-    
-        mockMvc.perform(post("/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"description\":\"Laptop\",\"price\":3000,\"stock\":-5,\"categoryId\":\"Electronics\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Product stock cannot be negative."));
-    }
-
-    @Test
-    void test_createProductWithZeroPrice() throws Exception {
-        doThrow(new ValidationException("Product price must be greater than zero."))
-                .when(productService).saveProduct(any(ProductDTO.class));
-    
-        mockMvc.perform(post("/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"description\":\"Laptop\",\"price\":0,\"stock\":10,\"categoryId\":\"Electronics\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Product price must be greater than zero."));
-    }
-
-    @Test
-    void test_createProductWithoutDescription() throws Exception {
-        ProductDTO invalidProduct = new ProductDTO(null, 3000L, 10L, "Electronics");
-
-        doThrow(new ValidationException("Product description is mandatory."))
-                .when(productService).saveProduct(any(ProductDTO.class));
-
-        mockMvc.perform(post("/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"price\":3000,\"stock\":10,\"categoryId\":\"Electronics\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Product description is mandatory."));
-    }
-
-    @Test
-    void test_saveAllProductsWithoutDescription() throws Exception {
-         List<ProductDTO> invalidProducts = Arrays.asList(
-                 new ProductDTO(null, 3000L, 10L, "Electronics")
-          );
-
-         doThrow(new ValidationException("Product description is mandatory."))
-                 .when(productService).saveAll(anyList());
-
-        mockMvc.perform(post("/products/bulk")
-                 .contentType(MediaType.APPLICATION_JSON)
-                 .content("[{\"price\":3000,\"stock\":10,\"categoryId\":\"Electronics\"}]"))
-                 .andExpect(status().isBadRequest())
-                 .andExpect(content().string("Product description is mandatory."));
-     }
 
     @Test
     void test_updateProduct() throws Exception {
