@@ -16,10 +16,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import ro.unibuc.hello.data.OrderRepository;
-import ro.unibuc.hello.data.UserRepository;
-import ro.unibuc.hello.data.ProductRepository;
-import ro.unibuc.hello.data.ProductOrderRepository;
+import ro.unibuc.hello.data.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -79,5 +76,28 @@ public class OrderControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    public void testCreateOrderAndGetOrders() throws Exception {
+        UserEntity user = userRepository.save(new UserEntity("john", "pass", "john@example.com"));
+        ProductEntity product = productRepository.save(new ProductEntity("Book", "A good book", 30L, 50L, null));
+
+        String orderJson = "{" +
+                "\"userId\": \"" + user.getId() + "\"," +
+                "\"status\": \"PENDING\"," +
+                "\"productOrders\": [{\"productId\": \"" + product.getId() + "\", \"quantity\": 2}]" +
+                "}";
+
+        mockMvc.perform(post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(orderJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.userId").value(user.getId()));
+
+        mockMvc.perform(get("/orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
     }
 }

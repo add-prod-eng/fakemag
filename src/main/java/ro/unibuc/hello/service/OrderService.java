@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ro.unibuc.hello.data.*;
 import ro.unibuc.hello.dto.OrderDTO;
+import ro.unibuc.hello.data.ProductOrderRepository;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +20,10 @@ public class OrderService {
     
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductOrderRepository productOrderRepository;
+
 
     public List<OrderDTO> getAllOrders() {
         return orderRepository.findAll().stream()
@@ -46,18 +52,16 @@ public class OrderService {
             product.setStock(product.getStock() - productOrder.getQuantity());
             productRepository.save(product);
         }
-        
-        List<OrderEntity> history = orderRepository.findAll().stream()
-                .filter(o -> o.getUser().getId().equals(user.getId()))
-                .collect(Collectors.toList());
-        
-        OrderEntity order = new OrderEntity(null, user, productOrders, status, LocalDateTime.now(), history);
-        orderRepository.save(order);
-        return new OrderDTO(order.getId(), user.getId(), null, status, order.getCreatedAt(), history.stream()
-                .map(o -> new OrderDTO(o.getId(), o.getUser().getId(), null, o.getStatus(), o.getCreatedAt(), null))
-                .collect(Collectors.toList()));
-    }
 
+        List<ProductOrderEntity> savedProductOrders = productOrderRepository.saveAll(productOrders);
+
+        // Performance-safe: exclude popularea orderHistory
+        OrderEntity order = new OrderEntity(null, user, savedProductOrders, status, LocalDateTime.now(), null);
+        orderRepository.save(order);
+
+        return new OrderDTO(order.getId(), user.getId(), null, status, order.getCreatedAt(), null);
+    }
+    
     public void deleteOrder(String id) {
         orderRepository.deleteById(id);
     }
