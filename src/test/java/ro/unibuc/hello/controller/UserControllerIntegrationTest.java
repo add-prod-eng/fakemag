@@ -17,6 +17,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.jayway.jsonpath.JsonPath;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import ro.unibuc.hello.data.UserRepository;
 
@@ -71,4 +73,65 @@ public class UserControllerIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1));
     }
+
+
+@Test
+public void testGetUserById() throws Exception {
+    String userJson = "{\"username\":\"testUser\",\"password\":\"Password123\",\"email\":\"test@example.com\"}";
+    String response = mockMvc.perform(post("/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(userJson))
+        .andExpect(status().isOk())
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    String userId = JsonPath.parse(response).read("$.id");
+
+    mockMvc.perform(get("/users/" + userId))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.username").value("testUser"))
+        .andExpect(jsonPath("$.email").value("test@example.com"));
+}
+
+
+@Test
+public void testDeleteUser() throws Exception {
+    String userJson = "{\"username\":\"deleteUser\",\"password\":\"Password123\",\"email\":\"delete@example.com\"}";
+    String response = mockMvc.perform(post("/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(userJson))
+        .andExpect(status().isOk())
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    String userId = JsonPath.parse(response).read("$.id");
+
+    mockMvc.perform(delete("/users/" + userId))
+        .andExpect(status().isNoContent());
+
+    mockMvc.perform(get("/users/" + userId))
+        .andExpect(status().isNotFound());
+}
+
+@Test
+public void testGetAllUsers() throws Exception {
+    String user1Json = "{\"username\":\"user1\",\"password\":\"Password123\",\"email\":\"user1@example.com\"}";
+    String user2Json = "{\"username\":\"user2\",\"password\":\"Password123\",\"email\":\"user2@example.com\"}";
+
+    mockMvc.perform(post("/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(user1Json))
+        .andExpect(status().isOk());
+
+    mockMvc.perform(post("/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(user2Json))
+        .andExpect(status().isOk());
+
+    mockMvc.perform(get("/users"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(2));
+}
 }
