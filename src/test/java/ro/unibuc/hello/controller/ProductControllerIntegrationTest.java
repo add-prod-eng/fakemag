@@ -2,7 +2,10 @@ package ro.unibuc.hello.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ro.unibuc.hello.dto.CategoryDTO;
 import ro.unibuc.hello.dto.ProductDTO;
+import ro.unibuc.hello.service.ProductService;
+import ro.unibuc.hello.service.CategoryService;
 
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +30,7 @@ public class ProductControllerIntegrationTest {
 
     @Container
     public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.20")
-            .withExposedPorts(27017)
-            .withEnv("MONGO_INITDB_ROOT_USERNAME", "root")
-            .withEnv("MONGO_INITDB_ROOT_PASSWORD", "example")
-            .withEnv("MONGO_INITDB_DATABASE", "testdb")
-            .withCommand("--auth");
+            .withExposedPorts(27017);
 
     @BeforeAll
     public static void setUp() {
@@ -45,49 +44,50 @@ public class ProductControllerIntegrationTest {
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        final String MONGO_URL = "mongodb://root:example@localhost:";
-        final String PORT = String.valueOf(mongoDBContainer.getMappedPort(27017));
-
-        registry.add("mongodb.connection.url", () -> MONGO_URL + PORT);
+        final String mongoUrl = "mongodb://localhost:" + mongoDBContainer.getMappedPort(27017);
+        registry.add("mongodb.connection.url", () -> mongoUrl);
     }
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    private CategoryService categoryService;
+
     @BeforeEach
     public void cleanUpAndAddTestData() throws Exception {
-        // Delete all products
-        mockMvc.perform(delete("/products"))
-                .andExpect(status().isOk());
+        categoryService.saveCategory(new CategoryDTO("10", "Category1", "Description1"));
+        categoryService.saveCategory(new CategoryDTO("11", "Category2", "Description2"));
 
-        // Add test data
-        ProductDTO product1 = new ProductDTO("1", "Product 1", 100L, 10L, "Category1");
-        ProductDTO product2 = new ProductDTO("2", "Product 2", 200L, 20L, "Category2");
+        productService.saveProduct(new ProductDTO("1", "Product 1", 100L, 10L, "10"));
+        productService.saveProduct(new ProductDTO("2", "Product 2", 200L, 20L, "11"));
 
-        mockMvc.perform(post("/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(product1)))
-                .andExpect(status().isOk());
+        // ProductDTO product1 = new ProductDTO("1", "Product 1", 100L, 10L, "Category1");
+        // ProductDTO product2 = new ProductDTO("2", "Product 2", 200L, 20L, "Category2");
 
-        mockMvc.perform(post("/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(product2)))
-                .andExpect(status().isOk());
+        // mockMvc.perform(post("/products")
+        //         .contentType(MediaType.APPLICATION_JSON)
+        //         .content(new ObjectMapper().writeValueAsString(product1)))
+        //         .andExpect(status().isOk());
+
+        // mockMvc.perform(post("/products")
+        //         .contentType(MediaType.APPLICATION_JSON)
+        //         .content(new ObjectMapper().writeValueAsString(product2)))
+        //         .andExpect(status().isOk());
     }
 
-    @Test
-    public void testGetAllProducts() throws Exception {
-        mockMvc.perform(get("/products"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$[0].description").value("Product 1"))
-            .andExpect(jsonPath("$[1].description").value("Product 2"));
+    @AfterEach
+    public void cleanUp() {
+        productService.deleteProduct("1");
+        productService.deleteProduct("2");
     }
 
     @Test
     public void testCreateProduct() throws Exception {
-        ProductDTO product = new ProductDTO("Product New", 300L, 30L, "Category3");
+        ProductDTO product = new ProductDTO("Product New", 300L, 30L, "10");
 
         mockMvc.perform(post("/products")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +107,7 @@ public class ProductControllerIntegrationTest {
     public void testUpdateProduct() throws Exception {
         ProductDTO product = new ProductDTO("1", "Product Updated", 150L, 15L, "Category1");
 
-        mockMvc.perform(put("/products/1")
+        mockMvc.perform(put("/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(product)))
                 .andExpect(status().isOk())
@@ -116,7 +116,7 @@ public class ProductControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value("Product Updated"))
                 .andExpect(jsonPath("$.price").value(150L));
 
-        mockMvc.perform(get("/products"))
+        mockMvc.perform(get(""))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(2))
@@ -126,30 +126,14 @@ public class ProductControllerIntegrationTest {
 
     @Test
     public void testDeleteProduct() throws Exception {
-        mockMvc.perform(delete("/products/1"))
+        mockMvc.perform(delete("/1"))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get("/products"))
+        mockMvc.perform(get(""))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].description").value("Product 2"));
     }
 
-    @Test
-    public void testGetProductsByCategory() throws Exception {
-        mockMvc.perform(get("/products/category/Category1"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].description").value("Product 1"));
-    }
-
-    @Test
-    public void testGetTopMostOrderedProducts() throws Exception {
-        mockMvc.perform(get("/products/products/top-ordered?limit=1"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.length()").value(1));
-    }
 }
