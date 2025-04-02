@@ -22,7 +22,7 @@ public class ProductOrderService {
     
     public ProductOrderDTO createProductOrder(ProductOrderDTO productOrderDTO) {
         ProductOrderEntity productOrder = new ProductOrderEntity(
-                null, new ProductEntity(productOrderDTO.getProductId(), "", "", 0L, 0L), productOrderDTO.getQuantity(), productOrderDTO.getOrderedAt()
+                null, new ProductEntity(productOrderDTO.getProductId(), "", "", 0L, 0L, new CategoryEntity("", "")), productOrderDTO.getQuantity(), productOrderDTO.getOrderedAt()
         );
         productOrderRepository.save(productOrder);
         return new ProductOrderDTO(productOrder.getId(), productOrder.getProduct().getId(), productOrder.getQuantity(), productOrder.getOrderedAt());

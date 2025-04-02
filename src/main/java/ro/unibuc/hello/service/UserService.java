@@ -3,12 +3,16 @@ package ro.unibuc.hello.service;
 import ro.unibuc.hello.data.UserEntity;
 import ro.unibuc.hello.data.UserRepository;
 import ro.unibuc.hello.dto.UserDTO;
+import ro.unibuc.hello.dto.UserCreateDTO;
+import ro.unibuc.hello.dto.UserLoginDTO;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ro.unibuc.hello.exception.EntityNotFoundException;
+import ro.unibuc.hello.exception.InvalidCredentialsException;
+import ro.unibuc.hello.exception.InvalidPassword;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,23 +48,76 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserDTO saveUser(UserDTO userDTO) {
+    public UserDTO saveUser(UserCreateDTO userDTO) {
         UserEntity user = new UserEntity(
-                Long.toString(counter.incrementAndGet()),
                 userDTO.getUsername(),
-                userDTO.getEmail(),
-                userDTO.getPassword()
+                Long.toString(counter.incrementAndGet()),
+                userDTO.getPassword(),
+                userDTO.getEmail()
         );
         userRepository.save(user);
         return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
     }
 
     public void deleteUser(String id) {
+        if (!userRepository.existsById(id)) {
+            throw new EntityNotFoundException(id);
+        }
         userRepository.deleteById(id);
     }
 
-    public boolean authenticateUser(String username, String password) {
+    public void checkPassword(String password) {
+        if (! (password.length() >= 6)){
+            throw new InvalidPassword("password must be at least 6 characters long");
+        }
+        boolean hasLower = false;
+        boolean hasUpper = false;
+        boolean hasDigit = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isLowerCase(c)) {
+                hasLower = true;
+            }
+            if (Character.isUpperCase(c)) {
+                hasUpper = true;
+            }
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+            }
+        }
+        if(!hasLower) {
+            throw new InvalidPassword("password must contain at least one lowercase letter");
+        }
+        if(!hasUpper) {
+            throw new InvalidPassword("password must contain at least one uppercase letter");
+        } 
+        if(!hasDigit) {
+            throw new InvalidPassword("password must contain at least one digit");
+        }
+    }
+
+    public void checkEmail(String email) {
+        if(!email.contains("@")) {
+            throw new InvalidPassword("email must contain @");
+        }
+        if(!email.contains(".")) {
+            throw new InvalidPassword("email must contain domain .");
+        }
+    }
+
+    public void authenticateUser(UserLoginDTO userDTO) {
+        String username = userDTO.getUsername();
+        String password = userDTO.getPassword();
         UserEntity user = userRepository.findByUsername(username);
-        return user != null && BCrypt.checkpw(password, user.getPassword());
+        if(user == null) {
+            throw new EntityNotFoundException(username);
+        }
+        if(!(BCrypt.checkpw(password, user.getPassword())))
+            throw new InvalidCredentialsException();
+    }
+
+    public void equalUser(UserLoginDTO userDTO, String userId){
+        UserEntity user = userRepository.findById(userId).orElse(null);
+        if(!(user != null && user.getUsername().equals(userDTO.getUsername())))
+            throw new InvalidCredentialsException();
     }
 }
