@@ -40,6 +40,30 @@ class ProductControllerTest {
     }
 
     @Test
+    void testGetProductsByCategory() throws Exception {
+        // Arrange
+        String categoryId = "cat1";
+        List<ProductDTO> products = Arrays.asList(
+                new ProductDTO("1", "Product 1", 50L, 20L, categoryId),
+                new ProductDTO("2", "Product 2", 30L, 10L, categoryId)
+        );
+        when(productService.getProductsByCategory(categoryId)).thenReturn(products);
+        mockMvc.perform(get("/products/category/" + categoryId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value("1"))
+                .andExpect(jsonPath("$[0].description").value("Product 1"))
+                .andExpect(jsonPath("$[0].price").value(50))
+                .andExpect(jsonPath("$[0].stock").value(20))
+                .andExpect(jsonPath("$[0].categoryId").value(categoryId))
+                .andExpect(jsonPath("$[1].id").value("2"))
+                .andExpect(jsonPath("$[1].description").value("Product 2"))
+                .andExpect(jsonPath("$[1].price").value(30))
+                .andExpect(jsonPath("$[1].stock").value(10))
+                .andExpect(jsonPath("$[1].categoryId").value(categoryId));
+    }
+
+    @Test
     void test_getAllProducts() throws Exception {
         List<ProductDTO> products = Arrays.asList(
                 new ProductDTO("1", "Laptop", 3000L, 10L, "Electronics"),
