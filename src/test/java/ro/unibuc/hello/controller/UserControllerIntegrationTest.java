@@ -28,11 +28,12 @@ public class UserControllerIntegrationTest {
 
     @Container
     public static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.20")
-            .withExposedPorts(27017);
+            .withExposedPorts(27017)
+            .withSharding();
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
-        final String mongoUrl = "mongodb://localhost:" + mongoDBContainer.getMappedPort(27017);
+        final String mongoUrl = "mongodb://host.docker.internal:" + mongoDBContainer.getMappedPort(27017);
         registry.add("mongodb.connection.url", () -> mongoUrl);
     }
     
