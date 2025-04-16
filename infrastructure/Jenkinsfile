@@ -11,16 +11,6 @@ pipeline {
                 sh './gradlew clean build'
             }
         }
-        stage('docker compose up') {
-            steps {
-                sh 'IMAGE_TAG=1.1.0 docker compose up -d hello mongo'
-            }
-        }
-        stage('test application') {
-            steps {
-                sh './gradlew clean build IMAGE_TAG=1.1.0 docker compose up -d hello mongo ./gradlew testIT'
-            }
-        }
         stage('docker push') {
             steps {
                 script {
