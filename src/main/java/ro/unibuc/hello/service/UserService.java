@@ -8,8 +8,12 @@ import ro.unibuc.hello.dto.UserLoginDTO;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import ro.unibuc.hello.exception.EntityNotFoundException;
 import ro.unibuc.hello.exception.InvalidCredentialsException;
 import ro.unibuc.hello.exception.InvalidPassword;
@@ -26,6 +30,16 @@ public class UserService {
     private UserRepository userRepository;
 
     private final AtomicLong counter = new AtomicLong();
+
+    private final MeterRegistry meterRegistry;
+
+    private final Counter userCounter;
+
+
+    public UserService(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+        this.userCounter = Counter.builder("user.created").register(meterRegistry);
+    }
 
     public UserDTO getUserById(String id) throws EntityNotFoundException {
         Optional<UserEntity> optionalUser = userRepository.findById(id);
@@ -56,6 +70,7 @@ public class UserService {
                 userDTO.getEmail()
         );
         userRepository.save(user);
+        userCounter.increment();
         return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
     }
 
