@@ -1,0 +1,56 @@
+groups:
+  - name: UserAlerts
+    rules:
+      - alert: WARNING-HighFailedUserFetch
+        expr: rate(user_failed_get_total[1m]) > -1
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: High rate of failed user fetches
+          description: "The rate of failed user fetches is high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: CRITICAL-HighFailedUserFetch
+        expr: rate(user_failed_get_total[1m]) > 20
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: Critical rate of failed user fetches
+          description: "The rate of failed user fetches is critically high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: WARNING-HighAuthResponseTime
+        expr: avg_over_time(user_auth_avg_response_time[1m]) > -1
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: High average authentication response time
+          description: "The average authentication response time is high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: CRITICAL-HighAuthResponseTime
+        expr: avg_over_time(user_auth_avg_response_time[1m]) > 1000
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: Critical average authentication response time
+          description: "The average authentication response time is critically high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: WARNING-HighFailedGetAllUsers
+        expr: rate(users_made_finished_get_all_requests[1m]) > -1
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: High rate of failed get all users requests
+          description: "The rate of failed get all users requests is high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: CRITICAL-HighFailedGetAllUsers
+        expr: rate(users_made_finished_get_all_requests[1m]) > 20
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: Critical rate of failed get all users requests
+          description: "The rate of failed get all users requests is critically high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"

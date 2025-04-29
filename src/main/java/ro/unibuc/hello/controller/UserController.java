@@ -11,6 +11,11 @@ import ro.unibuc.hello.dto.UserCreateDTO;
 import ro.unibuc.hello.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
+
 import ro.unibuc.hello.exception.EntityNotFoundException;
 import ro.unibuc.hello.exception.InvalidCredentialsException;
 import ro.unibuc.hello.exception.InvalidEmail;
@@ -19,6 +24,10 @@ import ro.unibuc.hello.exception.InvalidPassword;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.management.monitor.GaugeMonitor;
+import io.micrometer.core.instrument.Gauge;
 
 @RestController
 @RequestMapping("/users")
@@ -27,9 +36,40 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    private final MeterRegistry meterRegistry;
+
+    private final Counter failedUserFetch;
+
+    private AtomicInteger getAllUsersRequests = new AtomicInteger(0);
+
+    private AtomicInteger failedGetAllUsersRequests;
+
+    private AtomicInteger finishedGetAllUsAtomicInteger;
+
+    private AtomicInteger failedGetAllUsersGauge;
+
+    private AtomicInteger finishedGetAllUsersGauge;
+
+    public UserController(MeterRegistry meterRegistry){
+        this.meterRegistry = meterRegistry;
+        this.failedUserFetch = Counter.builder("user.failed_get").register(meterRegistry);
+        failedGetAllUsersGauge = meterRegistry.gauge("users.failed_get_all_requests", new AtomicInteger(0));
+        finishedGetAllUsersGauge = meterRegistry.gauge("users.made_finished_get_all_requests", new AtomicInteger(0));
+    }
+
     @GetMapping
-    public List<UserDTO> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<?> getAllUsers() {
+        getAllUsersRequests.incrementAndGet();
+        try{
+            var result = userService.getAllUsers();
+            finishedGetAllUsersGauge.set((finishedGetAllUsersGauge.get() / getAllUsersRequests.get()) * 100);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            failedGetAllUsersRequests.incrementAndGet();
+            failedGetAllUsersGauge.set((failedGetAllUsersRequests.get() / getAllUsersRequests.get()) * 100);
+            System.err.println(e.getMessage());
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
@@ -37,6 +77,7 @@ public class UserController {
         try{
             return ResponseEntity.ok(userService.getUserById(id));
         } catch (EntityNotFoundException e) {
+            failedUserFetch.increment();
             System.err.println(e.getMessage());
             return ResponseEntity.status(404).body(e.getMessage());
         } catch (Exception e) {

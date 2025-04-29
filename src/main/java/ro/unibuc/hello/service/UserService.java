@@ -7,6 +7,7 @@ import ro.unibuc.hello.dto.UserCreateDTO;
 import ro.unibuc.hello.dto.UserLoginDTO;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.mindrot.jbcrypt.BCrypt;
 import java.util.Optional;
+import io.micrometer.core.instrument.Gauge;
 
 @Service
 public class UserService {
@@ -35,10 +37,22 @@ public class UserService {
 
     private final Counter userCounter;
 
+    private final Counter userDeletedCounter;
+
+    private final Counter authCounter;
+
+    private final Counter gmailCounter;
+
+    private  AtomicInteger authAvgResponseTimeGauge;
+
 
     public UserService(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         this.userCounter = Counter.builder("user.created").register(meterRegistry);
+        this.userDeletedCounter = Counter.builder("user.deleted").register(meterRegistry);
+        this.authCounter = Counter.builder("user.nr_auth").register(meterRegistry);
+        this.gmailCounter = Counter.builder("user.gmail").register(meterRegistry);
+        this.authAvgResponseTimeGauge = meterRegistry.gauge("user.auth_avg_response_time", new AtomicInteger(0));
     }
 
     public UserDTO getUserById(String id) throws EntityNotFoundException {
@@ -71,6 +85,8 @@ public class UserService {
         );
         userRepository.save(user);
         userCounter.increment();
+        if(user.getEmail().split("@").equals("gmail.com"))
+            gmailCounter.increment();
         return new UserDTO(user.getId(), user.getUsername(), user.getEmail());
     }
 
@@ -79,6 +95,7 @@ public class UserService {
             throw new EntityNotFoundException(id);
         }
         userRepository.deleteById(id);
+        userDeletedCounter.increment();
     }
 
     public void checkPassword(String password) {
@@ -120,6 +137,7 @@ public class UserService {
     }
 
     public void authenticateUser(UserLoginDTO userDTO) {
+        long startTime = System.currentTimeMillis();
         String username = userDTO.getUsername();
         String password = userDTO.getPassword();
         UserEntity user = userRepository.findByUsername(username);
@@ -128,6 +146,10 @@ public class UserService {
         }
         if(!(BCrypt.checkpw(password, user.getPassword())))
             throw new InvalidCredentialsException();
+        long endTime = System.currentTimeMillis();
+        long responseTime = endTime - startTime;
+        authAvgResponseTimeGauge.set((int) responseTime);
+        authCounter.increment();
     }
 
     public void equalUser(UserLoginDTO userDTO, String userId){
