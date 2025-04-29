@@ -54,3 +54,12 @@ groups:
         annotations:
           summary: Critical rate of failed get all users requests
           description: "The rate of failed get all users requests is critically high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+      - alert: WARNING-HighResponseTimeGetAllUsers
+        expr: avg_over_time(users_made_finished_get_all_requests[1m]) > -1
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: High response time for get all users requests
+          description: "The response time for get all users requests is high.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"

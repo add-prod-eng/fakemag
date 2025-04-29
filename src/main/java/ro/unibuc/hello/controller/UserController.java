@@ -50,19 +50,31 @@ public class UserController {
 
     private AtomicInteger finishedGetAllUsersGauge;
 
+    private AtomicInteger avgResponseTimeGetAllUsersGauge;
+
+    private AtomicInteger reqNrGetAll = new AtomicInteger(0);
+
+    private AtomicInteger totalResponseTimeGetAll = new AtomicInteger(0);
+
     public UserController(MeterRegistry meterRegistry){
         this.meterRegistry = meterRegistry;
         this.failedUserFetch = Counter.builder("user.failed_get").register(meterRegistry);
-        failedGetAllUsersGauge = meterRegistry.gauge("users.failed_get_all_requests", new AtomicInteger(0));
-        finishedGetAllUsersGauge = meterRegistry.gauge("users.made_finished_get_all_requests", new AtomicInteger(0));
+        this.failedGetAllUsersGauge = meterRegistry.gauge("users.failed_get_all_requests", new AtomicInteger(0));
+        this.finishedGetAllUsersGauge = meterRegistry.gauge("users.made_finished_get_all_requests", new AtomicInteger(0));
+        this.avgResponseTimeGauge = meterRegistry.gauge("users.avg_response_time_get_all", new AtomicInteger(0));
     }
 
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
+        reqNr.incrementAndGet();
+        long startTime = System.currentTimeMillis();
         getAllUsersRequests.incrementAndGet();
         try{
             var result = userService.getAllUsers();
             finishedGetAllUsersGauge.set((finishedGetAllUsersGauge.get() / getAllUsersRequests.get()) * 100);
+            long endTime = System.currentTimeMillis();
+            responseTime.addAndGet((int) (endTime - startTime));
+            avgResponseTimeGauge.set(responseTime.get() / reqNr.get());
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             failedGetAllUsersRequests.incrementAndGet();
