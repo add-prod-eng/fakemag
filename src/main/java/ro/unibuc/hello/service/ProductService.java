@@ -56,7 +56,7 @@ public class ProductService {
 
     public List<ProductDTO> getTopMostOrderedProducts(int limit) {
         Map<ProductDTO, Long> productOrderCounts = orderRepository.findAll().stream()
-            .flatMap(order -> order.getProductOrders().stream()) // Assuming OrderEntity has a getProductOrders() method
+            .flatMap(order -> order.getProductOrders().stream())
             .map(productOrder -> {
                 ProductEntity product = productOrder.getProduct();
                 return new ProductDTO(
